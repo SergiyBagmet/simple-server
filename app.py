@@ -1,17 +1,34 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import pathlib
-import urllib.parse
 import mimetypes
+import socket
+from threading import Thread
+import urllib.parse
+
+from utils.base import BASE_DIR, DATA_JSON
+from sock_server import run_socket_server
 
 
-BASE_DIR = pathlib.Path()
+SERVER_IP = '127.0.0.1'
 
+SOCKET_PORT = 5000
+SERVER_PORT = 3000
+
+
+def send_data_to_soket(body: bytes):
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client_socket.sendto(body, (SERVER_IP, SOCKET_PORT))
+    client_socket.close()
+    
+    
 class HttpHandler(BaseHTTPRequestHandler):
     
-    
     def do_POST(self):
-        pass
-    
+        body = self.rfile.read(int(self.headers['Content-Length']))
+        send_data_to_soket(body)
+        self.send_response(302)
+        self.send_header('Location', 'message.html')
+        self.end_headers()
+        
     def do_GET(self):
         route = urllib.parse.urlparse(self.path)
         match route.path:
@@ -26,7 +43,6 @@ class HttpHandler(BaseHTTPRequestHandler):
                 else:    
                     self.send_html_file('error.html', 404)
 
-
     def send_html_file(self, filename, status_code=200):
         self.send_response(status_code)
         self.send_header('Content-type', 'text/html')
@@ -34,7 +50,6 @@ class HttpHandler(BaseHTTPRequestHandler):
         
         with open(filename, 'rb') as fd:
             self.wfile.write(fd.read())
-            
             
     def send_static(self, filename):
         self.send_response(200)
@@ -49,7 +64,7 @@ class HttpHandler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=HttpHandler):
-    server_address = ('', 3000)
+    server_address = ('', SERVER_PORT)
     http = server_class(server_address, handler_class)
     try:
         http.serve_forever()
@@ -57,5 +72,18 @@ def run(server_class=HTTPServer, handler_class=HttpHandler):
         http.server_close()
 
 
+
+
 if __name__ == '__main__':
-    run()
+    
+    thread_server = Thread(target=run)
+    thread_server.start()
+    
+    thread_socket = Thread(target=run_socket_server, args=(SERVER_IP, SOCKET_PORT))
+    thread_socket.start()
+    
+    try:
+        thread_server.join()
+        thread_socket.join()
+    except KeyboardInterrupt:
+        print("Main program stopped")
