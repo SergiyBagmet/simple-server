@@ -9,6 +9,9 @@ BASE_DIR = pathlib.Path()
 class HttpHandler(BaseHTTPRequestHandler):
     
     
+    def do_POST(self):
+        pass
+    
     def do_GET(self):
         route = urllib.parse.urlparse(self.path)
         match route.path:
