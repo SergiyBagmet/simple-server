@@ -41,7 +41,7 @@ class MyLogger:
         self.logger.setLevel(log_level)
     
     def add_file_handler(self, log_file):
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(filename=log_file, encoding='utf-8')
         file_handler.setLevel(logging.ERROR)
         file_handler.setFormatter(self.log_format)
         self.logger.addHandler(file_handler)
