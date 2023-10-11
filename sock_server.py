@@ -7,7 +7,7 @@ import json
 from utils.base import DATA_JSON
 from utils.my_logger import MyLogger
 
-logging = MyLogger(name="soket", log_level=20, log_file='parse.log').get_logger()
+logging = MyLogger(name="soket", log_level=10, log_file='parse.log').get_logger()
 
 
 BUFFER = 1024
@@ -21,8 +21,11 @@ def save_data(body: bytes, path: Path):
     try:
         payload = {
             str(datetime.now()):{
-                # k.strip():v.strip() for k, v in [el.split('=') for el in data.split('&')]
-                k: v[0].strip() for k, v in urllib.parse.parse_qs(data).items()
+                k: vl[0].strip() for k, vl in urllib.parse.parse_qs(qs=data, 
+                                                                    strict_parsing=True, 
+                                                                    keep_blank_values=True,
+                                                                    max_num_fields=2
+                                                                    ).items()
                 }
             }
         if (storage_data:= get_data(path)):
