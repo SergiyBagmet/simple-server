@@ -50,8 +50,10 @@ class JsonDataHandler:
     @json_path.setter
     def json_path(self, json_path: Path) -> None:
         if not json_path.exists():
-            logging.error(f'FileNotFoundError "{json_path}" ')
-            raise FileNotFoundError(f'File "{json_path}" not found')
+            with open(json_path, 'w', encoding='utf-8') as fd:
+                json.dump({}, fd, ensure_ascii=False, indent=4)
+            logging.info(f'Created JSON file: "{json_path}" ')
+            
         if json_path.suffix != '.json':
             logging.error(f'InvalidJsonFileError "{json_path}"')
             raise InvalidJsonFileError(f'File "{json_path}" has an invalid extension. It must be a .json file.')
